@@ -1,0 +1,55 @@
+-- Music Playlist Management System - MySQL Database
+-- Source playlist filenames: numbers in parentheses such as (1) or (2) are upload-name suffixes and are intentionally ignored.
+-- Generated from the uploaded CSV playlists.
+
+CREATE DATABASE IF NOT EXISTS music_playlist_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE music_playlist_db;
+
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS playlist_song;
+DROP TABLE IF EXISTS song;
+DROP TABLE IF EXISTS playlist;
+DROP TABLE IF EXISTS artist;
+SET FOREIGN_KEY_CHECKS = 1;
+
+CREATE TABLE artist (
+    artist_id INT AUTO_INCREMENT PRIMARY KEY,
+    artist_name VARCHAR(200) NOT NULL,
+    CONSTRAINT uq_artist_name UNIQUE (artist_name)
+) ENGINE=InnoDB;
+
+CREATE TABLE song (
+    song_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(500) NOT NULL,
+    artist_id INT NOT NULL,
+    duration_seconds INT NOT NULL,
+    CONSTRAINT chk_song_duration CHECK (duration_seconds >= 0),
+    CONSTRAINT uq_song_version UNIQUE (title, artist_id, duration_seconds),
+    CONSTRAINT fk_song_artist FOREIGN KEY (artist_id)
+        REFERENCES artist(artist_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+CREATE TABLE playlist (
+    playlist_id INT AUTO_INCREMENT PRIMARY KEY,
+    playlist_name VARCHAR(200) NOT NULL,
+    CONSTRAINT uq_playlist_name UNIQUE (playlist_name)
+) ENGINE=InnoDB;
+
+CREATE TABLE playlist_song (
+    playlist_id INT NOT NULL,
+    song_id INT NOT NULL,
+    position INT NOT NULL,
+    PRIMARY KEY (playlist_id, song_id),
+    CONSTRAINT uq_playlist_position UNIQUE (playlist_id, position),
+    CONSTRAINT chk_position CHECK (position > 0),
+    CONSTRAINT fk_ps_playlist FOREIGN KEY (playlist_id)
+        REFERENCES playlist(playlist_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT fk_ps_song FOREIGN KEY (song_id)
+        REFERENCES song(song_id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+) ENGINE=InnoDB;
